@@ -25,8 +25,6 @@ class Snake {
             new Point(1, 1),
             new Point(1, 2),
             new Point(1, 3),
-            new Point(1, 4),
-            new Point(1, 5)
         ];
         this.pattern = "#";
         this.direction = new Point(0, 1)
@@ -43,15 +41,20 @@ class Snake {
     getHead() {
         return this.body.at(-1);
     }
-    makeStep() {
+    makeStep(boolean) {
         const head = this.getHead()
         const direction = this.getDirection()
 
         const y = head.getY() + direction.getY()
         const x = head.getX() + direction.getX()
 
-        snake.body.push(new Point(y, x))
-        snake.body.shift()
+        if(boolean){
+            snake.body.push(new Point(y,x))
+        }
+        else{
+            snake.body.push(new Point(y,x))
+            snake.body.shift()
+        }
     }
     checkCollision() {
         const head = this.getHead()
@@ -65,12 +68,19 @@ class Snake {
         }
         return false
     }
+    checkPlacement(field){
+        const head = this.getHead()
+        const y = head.getY()
+        const x = head.getX()
+        return field[y][x] === undefined
+    }
 }
 class Apple {
     constructor() {
         this.coordinates = new Point(1,1)
         this.pattern = '@'
     }
+
     getPattern() {
         return this.pattern
     }
@@ -79,6 +89,20 @@ class Apple {
     }
     setCoordinates(newCoordinates) {
         this.coordinates = newCoordinates
+    }
+    uniqCoords(snake){
+        const body = snake.getBody()
+        const uniqCoords = new Point(randomNum(10),randomNum(10))
+
+        const coincide = body.some((point) => {
+           const y = point.getY() === uniqCoords.getY()
+           const x = point.getX() === uniqCoords.getX()
+           return y && x
+        })
+        if(coincide){
+            return this.uniqCoords(snake)
+        }
+        return uniqCoords
     }
 }
 class Game{
@@ -121,6 +145,10 @@ class Game{
         const y = head.getY() === appleCoords.getY()
         const x = head.getX() === appleCoords.getX()
 
+        if(y && x){
+            const newCoords = apple.uniqCoords(snake)
+            apple.setCoordinates(newCoords)
+        }
         return y && x
     }
     printField() {
@@ -130,26 +158,33 @@ class Game{
             }).join("\n")
         )
     }
+
 }
 
+const game = new Game(10, 10, '.')
 const apple = new Apple()
 const snake = new Snake()
-const game = new Game(10, 10, '.')
 
 const play = () => {
     console.clear()
-    const boolean = snake.checkCollision()
-    if (boolean) {
+    const field = game.getField()
+    const placemnt = snake.checkPlacement(field)
+    if(placemnt){
+        console.log('You are out of playing area')
+        process.exit()
+    }
+    const collision = snake.checkCollision()
+    if (collision) {
         console.log('DEAD')
         process.exit()
     }
-    snake.makeStep()
+    
     const check = game.checkApple(apple, snake)
-    if (check) {
-        apple.setCoordinates(new Point(randomNum(10), randomNum(10)))
-    }
-    game.printSnake(snake)
+    snake.makeStep(check)
+
+
     game.printApple(apple)
+    game.printSnake(snake)
     game.printField()
     game.makeField()
 }
