@@ -68,7 +68,7 @@ class Snake {
 }
 class Apple {
     constructor() {
-        this.coordinates = new Point()
+        this.coordinates = new Point(1,1)
         this.pattern = '@'
     }
     getPattern() {
@@ -77,8 +77,10 @@ class Apple {
     getCoordinates() {
         return this.coordinates
     }
+    setCoordinates(newCoordinates) {
+        this.coordinates = newCoordinates
+    }
 }
-
 class Game{
     constructor(width,height,pattern) {
         this.width = width
@@ -106,6 +108,21 @@ class Game{
             field[y][x] = chalk.green(snake.pattern)
         }
     }
+    printApple(apple) {
+        const field = this.getField()
+        const appleCoords = apple.getCoordinates()
+        const y = appleCoords.getY()
+        const x = appleCoords.getX()
+        field[y][x] = chalk.red(apple.getPattern())
+    }
+    checkApple(apple, snake) {
+        const head = snake.getHead()
+        const appleCoords = apple.getCoordinates()
+        const y = head.getY() === appleCoords.getY()
+        const x = head.getX() === appleCoords.getX()
+
+        return y && x
+    }
     printField() {
         console.log(
             this.field.map((row) => {
@@ -115,6 +132,7 @@ class Game{
     }
 }
 
+const apple = new Apple()
 const snake = new Snake()
 const game = new Game(10, 10, '.')
 
@@ -126,12 +144,17 @@ const play = () => {
         process.exit()
     }
     snake.makeStep()
+    const check = game.checkApple(apple, snake)
+    if (check) {
+        apple.setCoordinates(new Point(randomNum(10), randomNum(10)))
+    }
     game.printSnake(snake)
+    game.printApple(apple)
     game.printField()
     game.makeField()
 }
 
-setInterval(play, 350)
+setInterval(play, 250)
 
 process.stdin.on('keypress', (_, key) => {
 if (key.ctrl && key.name === 'c') process.exit()
