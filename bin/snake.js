@@ -1,5 +1,11 @@
 import readline from 'node:readline'
+import { randomNum } from './index.js'
+import chalk from 'chalk'
 
+readline.emitKeypressEvents(process.stdin)
+if (process.stdin.isTTY) {
+  process.stdin.setRawMode(true)
+}
 
 class Point {
     constructor(y, x) {
@@ -13,18 +19,63 @@ class Point {
         return this.x;
     }
 }
-
 class Snake {
     constructor() {
         this.body = [
             new Point(1, 1),
             new Point(1, 2),
-            new Point(1, 3)
+            new Point(1, 3),
+            new Point(1, 4),
+            new Point(1, 5)
         ];
         this.pattern = "#";
+        this.direction = new Point(0, 1)
+    }
+    getBody() {
+        return this.body
+    }
+    setDirection(newDirection) {
+        this.direction = newDirection
+    }
+    getDirection() {
+        return this.direction
     }
     getHead() {
         return this.body.at(-1);
+    }
+    makeStep() {
+        const head = this.getHead()
+        const direction = this.getDirection()
+
+        const y = head.getY() + direction.getY()
+        const x = head.getX() + direction.getX()
+
+        snake.body.push(new Point(y, x))
+        snake.body.shift()
+    }
+    checkCollision() {
+        const head = this.getHead()
+        const body = this.getBody()
+        for (let i = 0; i < body.length - 1; i++){
+            const y = head.getY() === body[i].getY()
+            const x = head.getX() === body[i].getX()
+            if (x && y) {
+                return true
+            }
+        }
+        return false
+    }
+}
+class Apple {
+    constructor() {
+        this.coordinates = new Point()
+        this.pattern = '@'
+    }
+    getPattern() {
+        return this.pattern
+    }
+    getCoordinates() {
+        return this.coordinates
     }
 }
 
@@ -32,7 +83,7 @@ class Game{
     constructor(width,height,pattern) {
         this.width = width
         this.height = height
-        this.pattern = pattern
+        this.pattern = chalk.grey(pattern)
         this.field = this.makeField()
     }
     getField() {
@@ -52,7 +103,7 @@ class Game{
         for (const point of body) {
             const y = point.getY()
             const x = point.getX()
-            field[y][x] = snake.pattern
+            field[y][x] = chalk.green(snake.pattern)
         }
     }
     printField() {
@@ -67,5 +118,36 @@ class Game{
 const snake = new Snake()
 const game = new Game(10, 10, '.')
 
-game.printSnake(snake)
-game.printField()
+const play = () => {
+    console.clear()
+    const boolean = snake.checkCollision()
+    if (boolean) {
+        console.log('DEAD')
+        process.exit()
+    }
+    snake.makeStep()
+    game.printSnake(snake)
+    game.printField()
+    game.makeField()
+}
+
+setInterval(play, 350)
+
+process.stdin.on('keypress', (_, key) => {
+if (key.ctrl && key.name === 'c') process.exit()
+    
+  switch (key.name) {
+    case 'up':
+      snake.setDirection(new Point(-1,0))
+      break
+    case 'down':
+      snake.setDirection(new Point(1,0))
+      break
+    case 'left':
+      snake.setDirection(new Point(0,-1))
+      break
+    case 'right':
+      snake.setDirection(new Point(0,1))
+      break
+  }
+})
