@@ -48,11 +48,12 @@ class Snake {
         const y = head.getY() + direction.getY()
         const x = head.getX() + direction.getX()
 
+        const point = new Point(y,x)
         if(boolean){
-            snake.body.push(new Point(y,x))
+            snake.body.push(point)
         }
         else{
-            snake.body.push(new Point(y,x))
+            snake.body.push(point)
             snake.body.shift()
         }
     }
@@ -68,12 +69,7 @@ class Snake {
         }
         return false
     }
-    checkPlacement(field){
-        const head = this.getHead()
-        const y = head.getY()
-        const x = head.getX()
-        return field[y][x] === undefined
-    }
+
 }
 class Apple {
     constructor() {
@@ -151,6 +147,14 @@ class Game{
         }
         return y && x
     }
+    checkSnakePlacement(snake){
+        const head = snake.getHead()
+        const field = this.getField()
+        const y = field[head.getY()] === undefined
+        const x = field[head.getX()] === undefined
+
+        return y || x
+    }
     printField() {
         console.log(
             this.field.map((row) => {
@@ -168,21 +172,18 @@ const snake = new Snake()
 const play = () => {
     console.clear()
     const field = game.getField()
-    const placemnt = snake.checkPlacement(field)
-    if(placemnt){
-        console.log('You are out of playing area')
-        process.exit()
-    }
     const collision = snake.checkCollision()
     if (collision) {
         console.log('DEAD')
         process.exit()
     }
-    
     const check = game.checkApple(apple, snake)
-    snake.makeStep(check)
-
-
+    snake.makeStep(check) 
+    const snakePlacement = game.checkSnakePlacement(snake)
+    if(snakePlacement){
+        console.log('You\'re out of playing area')
+        process.exit()
+    }
     game.printApple(apple)
     game.printSnake(snake)
     game.printField()
